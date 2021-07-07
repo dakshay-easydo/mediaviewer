@@ -8,6 +8,7 @@
     <style name="ImageViewerDialog.Default" parent="android:Theme.Translucent.NoTitleBar">
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:windowTranslucentNavigation">true</item>
+        <item name="android:fitsSystemWindows">true</item>
     </style>
 
 </resources>
