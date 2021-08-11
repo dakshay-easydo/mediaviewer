@@ -40,7 +40,9 @@ internal class ImagesPagerAdapter<T>(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val photoView = PhotoView(context).apply {
             isEnabled = isZoomingAllowed
-            setOnViewDragListener { _, _ -> setAllowParentInterceptOnEdge(scale == 1.0f) }
+            //always allow going to the next photo
+            setAllowParentInterceptOnEdge(true)
+            //setOnViewDragListener { _, _ -> setAllowParentInterceptOnEdge(scale == 1.0f) }
         }
 
         return ViewHolder(photoView).also { holders.add(it) }
