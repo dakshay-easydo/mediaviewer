@@ -34,3 +34,5 @@ android/proguard/
 .idea/
 build/
 .gradle
+.idea/deploymentTargetSelector.xml
+.idea/other.xml

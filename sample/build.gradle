@@ -1,13 +1,14 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
 
 android {
-    compileSdkVersion 29
+    compileSdkVersion 35
     defaultConfig {
         applicationId "com.stfalcon.stfalconimageviewersample"
-        minSdkVersion 19
-        targetSdkVersion 29
+        minSdkVersion 25
+        targetSdkVersion 35
         versionCode 1
         versionName "1.0"
 
@@ -19,18 +20,31 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    namespace 'com.stfalcon.sample'
+
+    buildFeatures {
+        viewBinding true
+    }
+    tasks.withType(KotlinCompile).all {
+        kotlinOptions {
+            jvmTarget = "17"
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
 }
 
 dependencies {
     implementation project(':imageviewer')
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
     implementation 'androidx.cardview:cardview:1.0.0'
-    implementation 'androidx.transition:transition:1.2.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.0-beta3'
-    implementation 'androidx.coordinatorlayout:coordinatorlayout:1.1.0-rc01'
+    implementation 'androidx.transition:transition:1.5.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.coordinatorlayout:coordinatorlayout:1.2.0'
 
     //UI
     implementation 'com.squareup.picasso:picasso:2.71828'
-    implementation 'me.relex:circleindicator:2.1.0'
 }

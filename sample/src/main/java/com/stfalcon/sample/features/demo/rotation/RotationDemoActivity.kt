@@ -9,7 +9,7 @@ import com.stfalcon.sample.common.extensions.getDrawableCompat
 import com.stfalcon.sample.common.extensions.loadImage
 import com.stfalcon.sample.common.models.Demo
 import com.stfalcon.sample.common.models.Poster
-import kotlinx.android.synthetic.main.activity_demo_rotation.*
+import com.stfalcon.sample.databinding.ActivityDemoRotationBinding
 
 class RotationDemoActivity : AppCompatActivity() {
 
@@ -23,12 +23,16 @@ class RotationDemoActivity : AppCompatActivity() {
 
     private lateinit var viewer: StfalconImageViewer<Poster>
 
+    private lateinit var binding : ActivityDemoRotationBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_demo_rotation)
 
-        rotationDemoImage.setOnClickListener { openViewer(0) }
-        loadPosterImage(rotationDemoImage, Demo.posters[0])
+        binding = ActivityDemoRotationBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        binding.rotationDemoImage.setOnClickListener { openViewer(0) }
+        loadPosterImage(binding.rotationDemoImage, Demo.posters[0])
     }
 
     override fun onPause() {
@@ -36,12 +40,10 @@ class RotationDemoActivity : AppCompatActivity() {
         viewer.dismiss()
     }
 
-    override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
-        if (savedInstanceState != null) {
-            isDialogShown = savedInstanceState.getBoolean(KEY_IS_DIALOG_SHOWN)
-            currentPosition = savedInstanceState.getInt(KEY_CURRENT_POSITION)
-        }
+        isDialogShown = savedInstanceState.getBoolean(KEY_IS_DIALOG_SHOWN)
+        currentPosition = savedInstanceState.getInt(KEY_CURRENT_POSITION)
 
         if (isDialogShown) {
             openViewer(currentPosition)
@@ -77,5 +79,5 @@ class RotationDemoActivity : AppCompatActivity() {
     }
 
     private fun getTransitionTarget(position: Int) =
-        if (position == 0) rotationDemoImage else null
+        if (position == 0) binding.rotationDemoImage else null
 }

@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.stfalcon.sample.R
+import com.stfalcon.sample.databinding.ActivityMainBinding
 import com.stfalcon.sample.features.demo.grid.PostersGridDemoActivity
 import com.stfalcon.sample.features.demo.rotation.RotationDemoActivity
 import com.stfalcon.sample.features.demo.scroll.ScrollingImagesDemoActivity
@@ -14,21 +15,23 @@ import com.stfalcon.sample.features.main.adapter.MainActivityPagerAdapter.Compan
 import com.stfalcon.sample.features.main.adapter.MainActivityPagerAdapter.Companion.ID_SCROLL
 import com.stfalcon.sample.features.main.adapter.MainActivityPagerAdapter.Companion.ID_STYLING
 import com.stfalcon.sample.features.main.card.DemoCardFragment
-import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity(),
     DemoCardFragment.OnCardActionListener {
 
+    private lateinit var binding: ActivityMainBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
 
-        mainCardsViewPager.apply {
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        binding.mainCardsViewPager.apply {
             adapter = MainActivityPagerAdapter(this@MainActivity, supportFragmentManager)
             pageMargin = resources.getDimension(R.dimen.card_padding).toInt() / 4
             offscreenPageLimit = 3
         }
-        mainCardsPagerIndicator.setViewPager(mainCardsViewPager)
     }
 
     override fun onCardAction(actionId: Int) {

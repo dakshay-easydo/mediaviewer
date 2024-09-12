@@ -11,6 +11,7 @@ import com.stfalcon.sample.common.models.Demo
 import com.stfalcon.sample.common.models.Poster
 import com.stfalcon.sample.common.ui.base.BaseActivity
 import com.stfalcon.sample.common.ui.views.PosterOverlayView
+import com.stfalcon.sample.databinding.ActivityDemoStylingBinding
 import com.stfalcon.sample.features.demo.styled.options.StylingOptions
 import com.stfalcon.sample.features.demo.styled.options.StylingOptions.Property.CONTAINER_PADDING
 import com.stfalcon.sample.features.demo.styled.options.StylingOptions.Property.HIDE_STATUS_BAR
@@ -20,19 +21,21 @@ import com.stfalcon.sample.features.demo.styled.options.StylingOptions.Property.
 import com.stfalcon.sample.features.demo.styled.options.StylingOptions.Property.SHOW_TRANSITION
 import com.stfalcon.sample.features.demo.styled.options.StylingOptions.Property.SWIPE_TO_DISMISS
 import com.stfalcon.sample.features.demo.styled.options.StylingOptions.Property.ZOOMING
-import kotlinx.android.synthetic.main.activity_demo_styling.*
 
 class StylingDemoActivity : BaseActivity() {
 
+    private lateinit var binding: ActivityDemoStylingBinding
     private var options = StylingOptions()
     private var overlayView: PosterOverlayView? = null
     private var viewer: StfalconImageViewer<Poster>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_demo_styling)
 
-        stylingPostersGridView.apply {
+        binding = ActivityDemoStylingBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        binding.stylingPostersGridView.apply {
             imageLoader = ::loadPosterImage
             onPosterClick = ::openViewer
         }
@@ -55,7 +58,7 @@ class StylingDemoActivity : BaseActivity() {
             .withStartPosition(startPosition)
             .withImageChangeListener { position ->
                 if (options.isPropertyEnabled(SHOW_TRANSITION)) {
-                    viewer?.updateTransitionImage(stylingPostersGridView.imageViews[position])
+                    viewer?.updateTransitionImage(binding.stylingPostersGridView.imageViews[position])
                 }
 
                 overlayView?.update(posters[position])

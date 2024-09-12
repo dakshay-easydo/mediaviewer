@@ -18,11 +18,14 @@ package com.stfalcon.imageviewer.viewer.dialog
 
 import android.content.Context
 import android.view.KeyEvent
+import android.view.View
+import android.view.WindowManager
 import android.widget.ImageView
 import androidx.appcompat.app.AlertDialog
 import com.stfalcon.imageviewer.R
 import com.stfalcon.imageviewer.viewer.builder.BuilderData
 import com.stfalcon.imageviewer.viewer.view.ImageViewerView
+
 
 internal class ImageViewerDialog<T>(
     context: Context,
@@ -54,7 +57,22 @@ internal class ImageViewerDialog<T>(
 
     fun show(animate: Boolean) {
         animateOpen = animate
+
+        val window = dialog.window ?: return
+
+        //hide the navigation bar by setting some flags
+        //first set 'not focusable' so that the other flags will work correctly
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+        )
+
+        window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                or View.SYSTEM_UI_FLAG_FULLSCREEN)
         dialog.show()
+
+        window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
     }
 
     fun close() {
