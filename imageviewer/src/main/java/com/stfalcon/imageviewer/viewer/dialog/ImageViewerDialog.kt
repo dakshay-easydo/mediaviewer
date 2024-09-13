@@ -85,6 +85,20 @@ internal class ImageViewerDialog<T>(
                 WindowCompat.getInsetsController(window, window.decorView)
             windowInsetsController.show(WindowInsetsCompat.Type.statusBars())
         }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            //when the current activity is edge-to-edge, the dialog will not extend behind the cut out on API 34 and below
+            //this will cause other views from the activity to show
+            //therefore we will specify that the black background content should draw behind it
+            val  layoutParams = window.attributes
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                layoutParams.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+            }
+            else {
+                layoutParams.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+            }
+            window.attributes = layoutParams
+        }
     }
 
     fun close() {
