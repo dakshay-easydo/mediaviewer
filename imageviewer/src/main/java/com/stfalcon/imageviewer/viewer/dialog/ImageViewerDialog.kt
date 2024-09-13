@@ -17,11 +17,14 @@
 package com.stfalcon.imageviewer.viewer.dialog
 
 import android.content.Context
+import android.os.Build
 import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
 import android.widget.ImageView
 import androidx.appcompat.app.AlertDialog
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import com.stfalcon.imageviewer.R
 import com.stfalcon.imageviewer.viewer.builder.BuilderData
 import com.stfalcon.imageviewer.viewer.view.ImageViewerView
@@ -73,6 +76,15 @@ internal class ImageViewerDialog<T>(
         dialog.show()
 
         window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
+
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            //when the current activity is edge-to-edge, the dialog will not extend behind the status bar on API 34 and below
+            //this will cause other views from the activity to show
+            //therefore we will show the status bar, which has a black background
+            val windowInsetsController =
+                WindowCompat.getInsetsController(window, window.decorView)
+            windowInsetsController.show(WindowInsetsCompat.Type.statusBars())
+        }
     }
 
     fun close() {
