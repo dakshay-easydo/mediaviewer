@@ -1,7 +1,7 @@
 <resources>
-    <string name="app_name">StfalconImageViewer Sample</string>
+    <string name="app_name">MediaViewer Sample</string>
 
-    <string name="app_title">Stfalcon Image Viewer</string>
+    <string name="app_title">Media Viewer</string>
 
     <string name="action_images_grid">Images Grid</string>
     <string name="action_scroll">Transitions on scroll</string>

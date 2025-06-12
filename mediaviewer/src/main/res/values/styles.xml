@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Base transparent theme using Material 3 -->
+    <style name="ImageViewerDialog.Transparent" parent="Theme.Material3.DayNight">
+        <!-- Remove action bar and title -->
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+
+        <!-- Transparent background -->
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:background">@android:color/transparent</item>
+
+        <!-- System bar text color -->
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
+
+        <!-- Disable default background dim -->
+        <item name="android:backgroundDimEnabled">false</item>
+    </style>
+
+    <!-- Variant for immersive fullscreen: system bars hidden via code -->
+    <style name="ImageViewerDialog.NoStatusBar" parent="ImageViewerDialog.Transparent">
+        <!-- No extra attributes here; immersive handled in code -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+
+    <!-- Variant with translucent nav bar and fitsSystemWindows -->
+    <style name="ImageViewerDialog.Default" parent="ImageViewerDialog.Transparent">
+        <item name="android:windowTranslucentNavigation">true</item>
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:fitsSystemWindows">true</item>
+    </style>
+
+</resources>
