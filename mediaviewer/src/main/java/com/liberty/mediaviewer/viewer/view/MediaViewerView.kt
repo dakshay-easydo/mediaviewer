@@ -148,13 +148,26 @@ internal class MediaViewerView<T>
         inflate(context, R.layout.view_image_viewer, this)
 
         rootContainer = findViewById(R.id.rootContainer)
+        checkNotNull(rootContainer) { "rootContainer is null!" }
+
         backgroundView = findViewById(R.id.backgroundView)
+
+        checkNotNull(backgroundView) { "backgroundView is null!" }
+
         dismissContainer = findViewById(R.id.dismissContainer)
+        checkNotNull(dismissContainer) { "dismissContainer is null!" }
+
 
         transitionImageContainer = findViewById(R.id.transitionImageContainer)
+        checkNotNull(transitionImageContainer) { "transitionImageContainer is null!" }
+
         transitionImageView = findViewById(R.id.transitionImageView)
+        checkNotNull(transitionImageView) { "transitionImageView is null!" }
 
         viewPager = findViewById(R.id.viewPager)
+
+        checkNotNull(viewPager) { "viewPager is null!" }
+
         viewPager.setPageTransformer(DepthPageTransformer())
         viewPager.configureForMediaViewer(
             isIdle = { isPagerIdle = it },
