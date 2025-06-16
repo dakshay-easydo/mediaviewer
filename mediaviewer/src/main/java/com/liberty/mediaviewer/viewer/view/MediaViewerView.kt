@@ -110,8 +110,8 @@ internal class MediaViewerView<T>
     private val transitionImageContainer: FrameLayout
     private val transitionImageView: ImageView
     private var externalTransitionImageView: ImageView? = null
-
     private var viewPager: ViewPager2
+
     private var mediaAdapter: MediaViewPager2Adapter<T>? = null
 
     private var directionDetector: SwipeDirectionDetector
@@ -164,7 +164,7 @@ internal class MediaViewerView<T>
         transitionImageView = findViewById(R.id.transitionImageView)
         checkNotNull(transitionImageView) { "transitionImageView is null!" }
 
-        viewPager = findViewById(R.id.viewPager)
+        viewPager = findViewById(R.id.viewPager2)
 
         checkNotNull(viewPager) { "viewPager is null!" }
 
@@ -414,13 +414,13 @@ internal class MediaViewerView<T>
     private fun createScaleGestureDetector() =
         ScaleGestureDetector(context, ScaleGestureDetector.SimpleOnScaleGestureListener())
 
-    private fun createSwipeToDismissHandler()
-            : SwipeToDismissHandler = SwipeToDismissHandler(
-        swipeView = dismissContainer,
-        shouldAnimateDismiss = { shouldDismissToBottom },
-        onDismiss = { animateClose() },
-        onSwipeViewMove = ::handleSwipeViewMove
-    )
+    private fun createSwipeToDismissHandler() =
+        SwipeToDismissHandler(
+            swipeView = dismissContainer,
+            shouldAnimateDismiss = { shouldDismissToBottom },
+            onDismiss = { animateClose() },
+            onSwipeViewMove = ::handleSwipeViewMove
+        )
 
     private fun createTransitionImageAnimator(transitionImageView: ImageView?) =
         TransitionImageAnimator(
