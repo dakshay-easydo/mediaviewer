@@ -37,14 +37,11 @@ class PostersGridDemoActivity : AppCompatActivity() {
             .Builder(
                 context = this,
                 medias = listOf(item),
-//                medias = Demo.mixed,
-                imageLoader = ::loadPosterImage,
                 isVideo = ::isVideo,
                 getMediaPath = ::getMediaPath,
             )
-//            .withStartPosition(startPosition)
             .withTransitionFrom(target)
-            .withImageChangeListener {
+            .withMediaChangeListener {
                 viewer.updateTransitionImage(binding.postersGridView.imageViews[it])
             }
             .show()

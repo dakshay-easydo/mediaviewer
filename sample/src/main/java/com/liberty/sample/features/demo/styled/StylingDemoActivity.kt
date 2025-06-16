@@ -55,9 +55,14 @@ class StylingDemoActivity : BaseActivity() {
     private fun openViewer(startPosition: Int, imageView: ImageView) {
         val posters = Demo.posters.toMutableList()
 
-        val builder = MediaViewer.Builder<Poster>(this, posters, ::loadPosterImage)
+        val builder = MediaViewer.Builder<Poster>(
+            context = this,
+            medias = Demo.posters,
+            getMediaPath = ::getMediaPath,
+            isVideo = ::isVideo,
+        )
             .withStartPosition(startPosition)
-            .withImageChangeListener { position ->
+            .withMediaChangeListener { position ->
                 if (options.isPropertyEnabled(SHOW_TRANSITION)) {
                     viewer?.updateTransitionImage(binding.stylingPostersGridView.imageViews[position])
                 }
@@ -109,6 +114,14 @@ class StylingDemoActivity : BaseActivity() {
                     ?.let { poster -> update(poster) }
             }
         }
+    }
+
+    private fun isVideo(poster: Poster?): Boolean {
+        return poster?.url?.endsWith(".mp4") == true
+    }
+
+    private fun getMediaPath(poster: Poster?): String {
+        return poster?.url ?: ""
     }
 
     private fun getRandomColor(): Int {

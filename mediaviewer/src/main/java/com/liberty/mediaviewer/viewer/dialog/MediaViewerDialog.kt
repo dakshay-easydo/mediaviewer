@@ -21,7 +21,6 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.view.KeyEvent
-import android.view.View
 import android.view.WindowManager
 import android.widget.ImageView
 import androidx.appcompat.app.AlertDialog
@@ -173,7 +172,7 @@ internal class MediaViewerDialog<T>(
             imagesMargin = builderData.imageMarginPixels
             overlayView = builderData.overlayView
             backgroundColor = builderData.backgroundColor
-            onPageChange = { builderData.mediaChangeListener?.onMediaChange(it) }
+            onPageChange = { builderData.pageChange?.onPageChange(it) }
             onDismiss = { dialog.dismiss() }
             setItems(
                 images = builderData.medias,

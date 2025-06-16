@@ -8,6 +8,7 @@ import com.liberty.sample.R
 import com.liberty.sample.common.extensions.getDrawableCompat
 import com.liberty.sample.common.extensions.loadImage
 import com.liberty.sample.common.models.Demo
+import com.liberty.sample.common.models.Poster
 import com.liberty.sample.databinding.ActivityDemoScrollingImagesBinding
 
 class ScrollingImagesDemoActivity : AppCompatActivity() {
@@ -18,7 +19,8 @@ class ScrollingImagesDemoActivity : AppCompatActivity() {
             binding.scrollingHorizontalFirstImage,
             binding.scrollingHorizontalSecondImage,
             binding.scrollingHorizontalThirdImage,
-            binding.scrollingHorizontalFourthImage)
+            binding.scrollingHorizontalFourthImage
+        )
     }
 
     private val verticalImageViews by lazy {
@@ -26,7 +28,8 @@ class ScrollingImagesDemoActivity : AppCompatActivity() {
             binding.scrollingVerticalFirstImage,
             binding.scrollingVerticalSecondImage,
             binding.scrollingVerticalThirdImage,
-            binding.scrollingVerticalFourthImage)
+            binding.scrollingVerticalFourthImage
+        )
     }
 
     private lateinit var viewer: MediaViewer<String>
@@ -56,15 +59,17 @@ class ScrollingImagesDemoActivity : AppCompatActivity() {
         startPosition: Int,
         target: ImageView,
         images: List<String>,
-        imageViews: List<ImageView>) {
+        imageViews: List<ImageView>
+    ) {
         viewer = MediaViewer.Builder<String>(
             context = this,
             medias = images,
-            imageLoader = ::loadImage
+            isVideo = ::isVideo,
+            getMediaPath = ::getMediaPath,
         )
             .withStartPosition(startPosition)
             .withTransitionFrom(target)
-            .withImageChangeListener { viewer.updateTransitionImage(imageViews.getOrNull(it)) }
+            .withMediaChangeListener { viewer.updateTransitionImage(imageViews.getOrNull(it)) }
             .show()
     }
 
@@ -73,5 +78,13 @@ class ScrollingImagesDemoActivity : AppCompatActivity() {
             background = getDrawableCompat(R.drawable.shape_placeholder)
             loadImage(url)
         }
+    }
+
+    private fun isVideo(poster: String?): Boolean {
+        return poster?.endsWith(".mp4") == true
+    }
+
+    private fun getMediaPath(poster: String?): String {
+        return poster.orEmpty()
     }
 }

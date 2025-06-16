@@ -25,8 +25,7 @@ import androidx.annotation.DimenRes
 import androidx.annotation.Px
 import androidx.core.content.ContextCompat
 import com.liberty.mediaviewer.listeners.OnDismissListener
-import com.liberty.mediaviewer.listeners.OnMediaChangeListener
-import com.liberty.mediaviewer.loader.ImageLoader
+import com.liberty.mediaviewer.listeners.OnPageChangeListener
 import com.liberty.mediaviewer.viewer.builder.BuilderData
 import com.liberty.mediaviewer.viewer.dialog.MediaViewerDialog
 import kotlin.math.roundToInt
@@ -112,16 +111,14 @@ open class MediaViewer<T> protected constructor(
     class Builder<T>(
         val context: Context,
         val medias: List<T>,
-        val imageLoader: ImageLoader<T>,
+        val getMediaPath: ((T) -> String),
         val isVideo: ((T) -> Boolean)? = null,
-        val getMediaPath: ((T) -> String)? = null,
     ) {
         private val data: BuilderData<T> = BuilderData<T>(
             medias = medias,
-            isVideo = isVideo!!,
-            getMediaPath = getMediaPath!!
+            getMediaPath = getMediaPath,
+            isVideo = isVideo ?: { false },
         )
-
 
         /**
          * Sets a position to start viewer from.
@@ -273,12 +270,12 @@ open class MediaViewer<T> protected constructor(
         }
 
         /**
-         * Sets [OnMediaChangeListener] for the viewer.
+         * Sets [com.liberty.mediaviewer.listeners.OnPageChangeListener] for the viewer.
          *
          * @return This Builder object to allow calls chaining
          */
-        fun withImageChangeListener(imageChangeListener: OnMediaChangeListener?): Builder<T> {
-            this.data.mediaChangeListener = imageChangeListener
+        fun withMediaChangeListener(mediaChangeListener: OnPageChangeListener?): Builder<T> {
+            this.data.pageChange = mediaChangeListener
             return this
         }
 
@@ -299,7 +296,7 @@ open class MediaViewer<T> protected constructor(
          * to do and want this to be created and displayed.
          */
         fun build(): MediaViewer<T> {
-            return MediaViewer<T>(context, data)
+            return MediaViewer<T>(context = context, data)
         }
 
         /**

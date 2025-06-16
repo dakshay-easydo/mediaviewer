@@ -20,8 +20,7 @@ import android.graphics.Color
 import android.view.View
 import android.widget.ImageView
 import com.liberty.mediaviewer.listeners.OnDismissListener
-import com.liberty.mediaviewer.listeners.OnMediaChangeListener
-import com.liberty.mediaviewer.loader.ImageLoader
+import com.liberty.mediaviewer.listeners.OnPageChangeListener
 
 class BuilderData<T>(
     val medias: List<T>,
@@ -30,7 +29,7 @@ class BuilderData<T>(
 ) {
     var backgroundColor = Color.BLACK
     var startPosition: Int = 0
-    var mediaChangeListener: OnMediaChangeListener? = null
+    var pageChange: OnPageChangeListener? = null
     var onDismissListener: OnDismissListener? = null
     var overlayView: View? = null
     var imageMarginPixels: Int = 0

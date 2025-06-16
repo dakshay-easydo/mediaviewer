@@ -1,13 +1,14 @@
-# MediaViews
+## Credits
+This project is based on [StfalconImageViewer](https://github.com/stfalcon-studio/StfalconImageViewer) by [Stfalcon Studio](https://github.com/stfalcon-studio).
+While the core inspiration and codebase come from StfalconImageViewer, this version includes additional features such as [video support, preview ViewPager2, etc.].
 
+Extended and customized for [your specific changes or purpose].
+# MediaViewer
 A simple and customizable full-screen image viewer with shared image transition support, "pinch to
 zoom" and "swipe to dismiss" gestures. Based on [PhotoView](https://github.com/chrisbanes/PhotoView).
 and a full-screen view player based on Media3-Exoplayer
 
 ![alt tag](images/image_viewer_main_demo.gif) ![alt tag](images/image_viewer_transition_demo.gif)
-
-### Who we are
-Need iOS and Android apps, MVP development or prototyping? Contact us via info@libertyinfospace.com.
 
 ### Requirements
 
@@ -32,23 +33,25 @@ allprojects {
 And then add the dependency to the **module `build.gradle`** file:
 
 ```gradle
-implementation 'com.dakshaysanghvi4395:mediaviewer:latest_version'
+implementation 'com.github.dakshay-easydo:mediaviewer:latest_version'
 ```
 
 ### Usage
 
 #### Simple usage
 
-All you need to show the viewer is to pass the context, list or array of your image objects and the
-implementation of the `ImageLoader` and call the `show()` method:
+All you need to show the viewer is to pass the context, list or array of your medias objects and the
+implementation of the `getMediaPath(position)` just to provide file path or url and call the `show()` method:
+To provide support for video playback, implement `isVideo(position)`.
 
 ```kotlin
-MediaViewer.Builder<Image>(context, images) { view, image ->
-    Glide.with(context).load(image).into(view)
-}.show()
+MediaViewer.Builder<Media>(
+    context = context, 
+    medias = medias,
+    isVideo = { false },
+    getMediaPath = { position -> medias.get(position).getUrl() }
+) .show()
 ```
-
-Piece of cake!
 
 #### Transition animation
 
@@ -63,7 +66,7 @@ viewer please see the sample app for how to do this.
 
 There are a lot of common cases (such as pagination, deleting, editing etc.) where you need to
 update the existing images list while the viewer is running. To do this you can simply update the
-existing list (or even replace it with a new one) and then call `updateImages(images)`.
+existing list (or even replace it with a new one) and then call `updateMedias(medias)`.
 
 #### Change current image
 
@@ -75,7 +78,7 @@ programmatically wherever you want!
 
 If you need to show some content over the image (e.g. sharing or download button, description,
 numeration etc.) you can set your own custom view using the `setOverlayView(customView)` and bind it
-with the viewer through the `ImageViewer.OnImageChangeListener`.
+with the viewer through the `MediaViwer.OnPageChangeListener`.
 
 #### Background
 
@@ -109,7 +112,12 @@ If you need to disable some of the gestures - you can use the `allowSwipeToDismi
 Here is the example with all of the existing options applied:
 
 ```kotlin
-MediaViewer.Builder<String>(this, images, ::loadImage)
+MediaViewer.Builder<String>(
+    context = this, 
+    medias = medias,
+    isVideo = { position -> medias.get(position).isVideo() },
+    getMediaPath = { position -> medias.get(position) },
+)
     .withStartPosition(startPosition)
     .withBackgroundColor(color)
     //.withBackgroundColorResource(R.color.color)

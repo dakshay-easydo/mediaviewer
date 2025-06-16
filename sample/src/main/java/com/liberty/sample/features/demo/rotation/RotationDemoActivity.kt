@@ -23,7 +23,7 @@ class RotationDemoActivity : AppCompatActivity() {
 
     private lateinit var viewer: MediaViewer<Poster>
 
-    private lateinit var binding : ActivityDemoRotationBinding
+    private lateinit var binding: ActivityDemoRotationBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,10 +57,15 @@ class RotationDemoActivity : AppCompatActivity() {
     }
 
     private fun openViewer(startPosition: Int) {
-        viewer = MediaViewer.Builder<Poster>(this, Demo.posters, ::loadPosterImage)
+        viewer = MediaViewer.Builder<Poster>(
+            context = this,
+            medias = Demo.posters,
+            getMediaPath = ::getMediaPath,
+            isVideo = ::isVideo,
+        )
             .withTransitionFrom(getTransitionTarget(startPosition))
             .withStartPosition(startPosition)
-            .withImageChangeListener {
+            .withMediaChangeListener {
                 currentPosition = it
                 viewer.updateTransitionImage(getTransitionTarget(it))
             }
@@ -76,6 +81,14 @@ class RotationDemoActivity : AppCompatActivity() {
             background = getDrawableCompat(R.drawable.shape_placeholder)
             loadImage(poster?.url)
         }
+    }
+
+    private fun isVideo(poster: Poster): Boolean {
+        return poster.url.endsWith(".mp4")
+    }
+
+    private fun getMediaPath(poster: Poster?): String {
+        return poster?.url.orEmpty()
     }
 
     private fun getTransitionTarget(position: Int) =
