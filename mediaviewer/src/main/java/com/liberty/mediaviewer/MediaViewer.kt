@@ -118,9 +118,8 @@ open class MediaViewer<T> protected constructor(
     ) {
         private val data: BuilderData<T> = BuilderData<T>(
             medias = medias,
-            imageLoader = imageLoader,
-            isVideo = isVideo,
-            getMediaPath = getMediaPath
+            isVideo = isVideo!!,
+            getMediaPath = getMediaPath!!
         )
 
 

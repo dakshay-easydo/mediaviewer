@@ -28,7 +28,10 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import com.liberty.mediaviewer.R
+import com.liberty.mediaviewer.common.extensions.findFragmentActivity
 import com.liberty.mediaviewer.viewer.builder.BuilderData
 import com.liberty.mediaviewer.viewer.view.MediaViewerView
 
@@ -36,7 +39,6 @@ internal class MediaViewerDialog<T>(
     context: Context,
     private val builderData: BuilderData<T>
 ) {
-
     private val dialog: AlertDialog
     private val viewerView: MediaViewerView<T> = MediaViewerView(context)
     private var animateOpen = true
@@ -49,6 +51,7 @@ internal class MediaViewerDialog<T>(
 
     init {
         setupViewerView()
+        addLifecycle(context)
         dialog = AlertDialog
             .Builder(context, dialogStyle)
             .setView(viewerView)
@@ -62,9 +65,19 @@ internal class MediaViewerDialog<T>(
                     )
                 }
                 setOnDismissListener {
+                    viewerView.release()
                     builderData.onDismissListener?.onDismiss()
                 }
             }
+    }
+
+    private fun addLifecycle(context: Context) {
+        context.findFragmentActivity()?.lifecycle?.addObserver(
+            object : DefaultLifecycleObserver {
+                override fun onDestroy(owner: LifecycleOwner) {
+                    dialog.dismiss()
+                }
+            })
     }
 
     fun show(animate: Boolean) {
@@ -156,22 +169,18 @@ internal class MediaViewerDialog<T>(
         viewerView.apply {
             isZoomingAllowed = builderData.isZoomingAllowed
             isSwipeToDismissAllowed = builderData.isSwipeToDismissAllowed
-
             containerPadding = builderData.containerPaddingPixels
             imagesMargin = builderData.imageMarginPixels
             overlayView = builderData.overlayView
-
-            setBackgroundColor(builderData.backgroundColor)
+            backgroundColor = builderData.backgroundColor
+            onPageChange = { builderData.mediaChangeListener?.onMediaChange(it) }
+            onDismiss = { dialog.dismiss() }
             setItems(
                 images = builderData.medias,
                 startPosition = builderData.startPosition,
                 isVideo = builderData.isVideo,
-                imageLoader = builderData.imageLoader,
                 getMediaPath = builderData.getMediaPath,
             )
-
-            onPageChange = { position -> builderData.mediaChangeListener?.onMediaChange(position) }
-            onDismiss = { dialog.dismiss() }
         }
     }
 }

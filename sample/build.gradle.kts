@@ -8,7 +8,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.stfalcon.stfalconimageviewersample"
+        applicationId = "com.liberty.sample"
         minSdk = 25
         targetSdk = 35
         versionCode = 1

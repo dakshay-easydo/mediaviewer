@@ -3,6 +3,10 @@
 
     <!-- Base transparent theme using Material 3 -->
     <style name="ImageViewerDialog.Transparent" parent="Theme.Material3.DayNight">
+        <!-- Material3 required text appearances -->
+        <item name="textAppearanceBodyLarge">@style/TextAppearance.Material3.BodyLarge</item>
+        <item name="textAppearanceLabelLarge">@style/TextAppearance.Material3.LabelLarge</item>
+
         <!-- Remove action bar and title -->
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>

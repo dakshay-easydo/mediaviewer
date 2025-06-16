@@ -6,119 +6,89 @@ import android.util.SparseArray
 import android.view.View
 import android.view.ViewGroup
 import androidx.viewpager.widget.PagerAdapter
+import androidx.viewpager.widget.ViewPager
 import com.liberty.mediaviewer.common.extensions.forEach
+import java.lang.ref.WeakReference
 
 internal abstract class RecyclingPagerAdapter<VH : RecyclingPagerAdapter.ViewHolder>
     : PagerAdapter() {
 
-    companion object {
-        private val STATE = RecyclingPagerAdapter::class.java.simpleName
-        private const val VIEW_TYPE_IMAGE = 0
-    }
+    private val typeCaches = SparseArray<RecycleCache>()
+    private var savedStates = SparseArray<Parcelable>()
 
     internal abstract fun getItemCount(): Int
     internal abstract fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH
     internal abstract fun onBindViewHolder(holder: VH, position: Int)
-
-    private val typeCaches = SparseArray<RecycleCache>()
-    private var savedStates = SparseArray<Parcelable>()
-
-    override fun destroyItem(parent: ViewGroup, position: Int, item: Any) {
-        if (item is ViewHolder) {
-            item.detach(parent)
-        }
-    }
+    open fun getItemId(position: Int): Int = position
 
     override fun getCount() = getItemCount()
+    override fun getItemPosition(item: Any): Int = POSITION_NONE
 
-    override fun getItemPosition(item: Any) = POSITION_NONE
-
-    @Suppress("UNCHECKED_CAST")
     override fun instantiateItem(parent: ViewGroup, position: Int): Any {
-        var cache = typeCaches.get(VIEW_TYPE_IMAGE)
-
-        if (cache == null) {
-            cache = RecycleCache(this)
-            typeCaches.put(VIEW_TYPE_IMAGE, cache)
+        val viewType = 0
+        val cache = typeCaches[viewType] ?: RecycleCache(this).also {
+            typeCaches.put(viewType, it)
         }
-
-        return cache.getFreeViewHolder(parent, VIEW_TYPE_IMAGE)
-                .apply {
-                    attach(parent, position)
-                    onBindViewHolder(this as VH, position)
-                    onRestoreInstanceState(savedStates.get(getItemId(position)))
-                }
+        @Suppress("UNCHECKED_CAST")
+        return cache.getFreeViewHolder(parent, viewType).apply {
+            attach(parent, position)
+            onBindViewHolder(this as VH, position)
+            onRestoreInstanceState(savedStates.get(getItemId(position)))
+        }
     }
 
     override fun isViewFromObject(view: View, obj: Any): Boolean =
-            obj is ViewHolder && obj.itemView === view
+        obj is ViewHolder && obj.itemView === view
 
     override fun saveState(): Parcelable? {
         for (viewHolder in getAttachedViewHolders()) {
             savedStates.put(getItemId(viewHolder.position), viewHolder.onSaveInstanceState())
         }
-        return Bundle().apply { putSparseParcelableArray(STATE, savedStates) }
+        return Bundle().apply { putSparseParcelableArray("STATE", savedStates) }
     }
 
     override fun restoreState(state: Parcelable?, loader: ClassLoader?) {
-        if (state != null && state is Bundle) {
+        if (state is Bundle) {
             state.classLoader = loader
-            val sparseArray: SparseArray<Parcelable>? = state.getSparseParcelableArray(STATE)
-            savedStates = sparseArray ?: SparseArray()
+            savedStates = state.getSparseParcelableArray("STATE") ?: SparseArray()
         }
-        super.restoreState(state, loader)
     }
-
-    private fun getItemId(position: Int) = position
 
     private fun getAttachedViewHolders(): List<ViewHolder> {
-        val attachedViewHolders = ArrayList<ViewHolder>()
-
-        typeCaches.forEach { _, value ->
-            value.caches.forEach { holder ->
-                if (holder.isAttached) {
-                    attachedViewHolders.add(holder)
-                }
+        return buildList {
+            for (i in 0 until typeCaches.size()) {
+                val cache = typeCaches.valueAt(i)
+                addAll(cache.caches.filter { it.isAttached })
             }
         }
-
-        return attachedViewHolders
     }
 
-    private class RecycleCache internal constructor(
-            private val adapter: RecyclingPagerAdapter<*>
+    private class RecycleCache(
+        private val adapter: RecyclingPagerAdapter<*>,
+        private val maxSize: Int = 6
     ) {
+        internal val caches = ArrayDeque<ViewHolder>()
 
-        internal val caches = mutableListOf<ViewHolder>()
+        fun getFreeViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+            val existing = caches.firstOrNull { !it.isAttached }
+            if (existing != null) return existing
 
-        internal fun getFreeViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            var iterationsCount = 0
-            var viewHolder: ViewHolder
-
-            while (iterationsCount < caches.size) {
-                viewHolder = caches[iterationsCount]
-                if (!viewHolder.isAttached) {
-                    return viewHolder
-                }
-                iterationsCount++
+            return if (caches.size < maxSize) {
+                adapter.onCreateViewHolder(parent, viewType).also { caches.add(it) }
+            } else {
+                // Reuse LRU
+                caches.removeFirst().also { caches.add(it) }
             }
-
-            return adapter.onCreateViewHolder(parent, viewType).also { caches.add(it) }
         }
     }
 
     internal abstract class ViewHolder(internal val itemView: View) {
-
-        companion object {
-            private val STATE = ViewHolder::class.java.simpleName
-        }
-
         internal var position: Int = 0
         internal var isAttached: Boolean = false
 
         internal fun attach(parent: ViewGroup, position: Int) {
-            this.isAttached = true
             this.position = position
+            isAttached = true
             parent.addView(itemView)
         }
 
@@ -127,21 +97,16 @@ internal abstract class RecyclingPagerAdapter<VH : RecyclingPagerAdapter.ViewHol
             isAttached = false
         }
 
-        internal fun onRestoreInstanceState(state: Parcelable?) {
-            getStateFromParcelable(state)?.let { itemView.restoreHierarchyState(it) }
-        }
-
         internal fun onSaveInstanceState(): Parcelable {
             val state = SparseArray<Parcelable>()
             itemView.saveHierarchyState(state)
-            return Bundle().apply { putSparseParcelableArray(STATE, state) }
+            return Bundle().apply { putSparseParcelableArray("STATE", state) }
         }
 
-        private fun getStateFromParcelable(state: Parcelable?): SparseArray<Parcelable>? {
-            if (state != null && state is Bundle && state.containsKey(STATE)) {
-                return state.getSparseParcelableArray<Parcelable>(STATE)
+        internal fun onRestoreInstanceState(state: Parcelable?) {
+            (state as? Bundle)?.getSparseParcelableArray<Parcelable>("STATE")?.let {
+                itemView.restoreHierarchyState(it)
             }
-            return null
         }
     }
 }

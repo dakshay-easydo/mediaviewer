@@ -25,6 +25,7 @@ dependencies {
     api(libs.appcompat)
     api(libs.transition)
     implementation(libs.material)
+    implementation(libs.glide)
     implementation(libs.photoview)
     implementation(libs.media3)
     implementation(libs.media3ui)

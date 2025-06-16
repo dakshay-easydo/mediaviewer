@@ -17,6 +17,7 @@
 package com.liberty.mediaviewer.viewer.view
 
 import android.content.Context
+import android.graphics.Color
 import android.util.AttributeSet
 import android.view.GestureDetector
 import android.view.MotionEvent
@@ -26,11 +27,13 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.RelativeLayout
+import androidx.viewpager2.widget.ViewPager2
 import com.liberty.mediaviewer.R
-import com.liberty.mediaviewer.common.extensions.addOnPageChangeListener
+import com.liberty.mediaviewer.common.decorators.HorizontalMarginDecoration
 import com.liberty.mediaviewer.common.extensions.animateAlpha
 import com.liberty.mediaviewer.common.extensions.applyMargin
 import com.liberty.mediaviewer.common.extensions.copyBitmapFrom
+import com.liberty.mediaviewer.common.extensions.findFragmentActivity
 import com.liberty.mediaviewer.common.extensions.isRectVisible
 import com.liberty.mediaviewer.common.extensions.isVisible
 import com.liberty.mediaviewer.common.extensions.makeGone
@@ -45,12 +48,14 @@ import com.liberty.mediaviewer.common.gestures.direction.SwipeDirection.RIGHT
 import com.liberty.mediaviewer.common.gestures.direction.SwipeDirection.UP
 import com.liberty.mediaviewer.common.gestures.direction.SwipeDirectionDetector
 import com.liberty.mediaviewer.common.gestures.dismiss.SwipeToDismissHandler
-import com.liberty.mediaviewer.common.pager.MultiTouchViewPager
-import com.liberty.mediaviewer.loader.ImageLoader
-import com.liberty.mediaviewer.viewer.adapter.MediaPagerAdapter
+import com.liberty.mediaviewer.common.extensions.configureForMediaViewer
+import com.liberty.mediaviewer.common.tranformer.DepthPageTransformer
+import com.liberty.mediaviewer.viewer.adapter.MediaViewPager2Adapter
 import kotlin.math.abs
 
-internal class MediaViewerView<T> @JvmOverloads constructor(
+
+internal class MediaViewerView<T>
+@JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
@@ -60,9 +65,9 @@ internal class MediaViewerView<T> @JvmOverloads constructor(
     internal var isSwipeToDismissAllowed = true
 
     internal var currentPosition: Int
-        get() = imagesPager.currentItem
+        get() = viewPager.currentItem
         set(value) {
-            imagesPager.currentItem = value
+            viewPager.currentItem = value
         }
 
     internal var onDismiss: (() -> Unit)? = null
@@ -73,16 +78,29 @@ internal class MediaViewerView<T> @JvmOverloads constructor(
 
     internal var containerPadding = intArrayOf(0, 0, 0, 0)
 
+
+    private var marginDecoration = HorizontalMarginDecoration()
+
     internal var imagesMargin
-        get() = imagesPager.pageMargin
+        get() = marginDecoration.marginPx
         set(value) {
-            imagesPager.pageMargin = value
+            viewPager.removeItemDecoration(marginDecoration)
+            marginDecoration = HorizontalMarginDecoration(value)
+            viewPager.addItemDecoration(marginDecoration)
         }
 
+    internal var isPagerIdle = true
     internal var overlayView: View? = null
         set(value) {
             field = value
             value?.let { rootContainer.addView(it) }
+        }
+
+
+    internal var backgroundColor: Int = Color.BLACK
+        set(value) {
+            field = value
+            backgroundView.setBackgroundColor(value)
         }
 
     private var rootContainer: ViewGroup
@@ -93,8 +111,8 @@ internal class MediaViewerView<T> @JvmOverloads constructor(
     private val transitionImageView: ImageView
     private var externalTransitionImageView: ImageView? = null
 
-    private var imagesPager: MultiTouchViewPager
-    private var mediaAdapter: MediaPagerAdapter<T>? = null
+    private var viewPager: ViewPager2
+    private var mediaAdapter: MediaViewPager2Adapter<T>? = null
 
     private var directionDetector: SwipeDirectionDetector
     private var gestureDetector: GestureDetector
@@ -106,10 +124,9 @@ internal class MediaViewerView<T> @JvmOverloads constructor(
     private var isOverlayWasClicked: Boolean = false
     private var swipeDirection: SwipeDirection? = null
 
-    private var medias: List<T> = listOf()
+    private var items: List<T> = listOf()
     private var isVideo: ((T) -> Boolean)? = null
     private var getMediaPath: ((T) -> String)? = null
-    private var imageLoader: ImageLoader<T>? = null
     private lateinit var transitionImageAnimator: TransitionImageAnimator
 
     private var startPosition: Int = 0
@@ -126,6 +143,7 @@ internal class MediaViewerView<T> @JvmOverloads constructor(
     private val isAtStartPosition: Boolean
         get() = currentPosition == startPosition
 
+
     init {
         inflate(context, R.layout.view_image_viewer, this)
 
@@ -136,14 +154,17 @@ internal class MediaViewerView<T> @JvmOverloads constructor(
         transitionImageContainer = findViewById(R.id.transitionImageContainer)
         transitionImageView = findViewById(R.id.transitionImageView)
 
-        imagesPager = findViewById(R.id.imagesPager)
-        imagesPager.addOnPageChangeListener(
-            onPageSelected = {
+        viewPager = findViewById(R.id.viewPager)
+        viewPager.setPageTransformer(DepthPageTransformer())
+        viewPager.configureForMediaViewer(
+            isIdle = { isPagerIdle = it },
+            onPageChange = {
                 externalTransitionImageView?.apply {
                     if (isAtStartPosition) makeInvisible() else makeVisible()
                 }
                 onPageChange?.invoke(it)
             })
+
 
         directionDetector = createSwipeDirectionDetector()
         gestureDetector = createGestureDetector()
@@ -171,46 +192,41 @@ internal class MediaViewerView<T> @JvmOverloads constructor(
 
         if (swipeDirection == null && (scaleDetector.isInProgress || event.pointerCount > 1 || wasScaled)) {
             wasScaled = true
-            return imagesPager.dispatchTouchEvent(event)
+            return viewPager.dispatchTouchEvent(event)
         }
 
         return if (isScaled) super.dispatchTouchEvent(event) else handleTouchIfNotScaled(event)
     }
 
     override fun setBackgroundColor(color: Int) {
-        findViewById<View>(R.id.backgroundView).setBackgroundColor(color)
+        backgroundView.setBackgroundColor(color)
     }
 
     internal fun setItems(
         images: List<T>,
         startPosition: Int,
-        imageLoader: ImageLoader<T>,
-        isVideo: ((T) -> Boolean)? = null,
-        getMediaPath: ((T) -> String)? = null,
+        isVideo: (T) -> Boolean,
+        getMediaPath: (T) -> String,
     ) {
-        this.medias = images
+        this.items = images
         this.isVideo = isVideo
-        this.imageLoader = imageLoader
         this.getMediaPath = getMediaPath
         this.startPosition = startPosition
-        this.mediaAdapter = MediaPagerAdapter(
-            context = context,
+        this.mediaAdapter = MediaViewPager2Adapter(
+            activity = context.findFragmentActivity()!!,
             items = images,
-            imageLoader = imageLoader,
-            isZoomingAllowed = isZoomingAllowed,
+            zoomEnable = isZoomingAllowed,
             isVideo = isVideo,
             getMediaPath = getMediaPath,
         )
-        this.imagesPager.adapter = mediaAdapter
 
+        this.viewPager.adapter = mediaAdapter
+        currentPosition = startPosition
     }
 
     internal fun open(transitionImageView: ImageView?, animate: Boolean) {
         prepareViewsForTransition()
-
         externalTransitionImageView = transitionImageView
-
-        imageLoader?.loadImage(this.transitionImageView, medias[startPosition])
         this.transitionImageView.copyBitmapFrom(transitionImageView)
 
         transitionImageAnimator = createTransitionImageAnimator(transitionImageView)
@@ -229,8 +245,17 @@ internal class MediaViewerView<T> @JvmOverloads constructor(
     }
 
     internal fun updateMedias(images: List<T>) {
-        this.medias = images
+        val old = items[currentPosition]
+        val newPosition = images.indexOfFirst { it == old }
+        this.items = images
         mediaAdapter?.updateMedias(images)
+
+        val currentPosition = viewPager.currentItem.coerceAtMost(images.lastIndex)
+        viewPager.setCurrentItem(currentPosition, false)
+
+        if (currentPosition != newPosition && newPosition != -1) {
+            viewPager.setCurrentItem(newPosition, false)
+        }
     }
 
     internal fun updateTransitionImage(imageView: ImageView?) {
@@ -240,11 +265,19 @@ internal class MediaViewerView<T> @JvmOverloads constructor(
         externalTransitionImageView = imageView
         startPosition = currentPosition
         transitionImageAnimator = createTransitionImageAnimator(imageView)
-        imageLoader?.loadImage(transitionImageView, medias[startPosition])
+//        imageLoader?.loadImage(transitionImageView, items[startPosition])
     }
 
     internal fun resetScale() {
         mediaAdapter?.resetScale(currentPosition)
+    }
+
+    internal fun scale(enable: Boolean) {
+        mediaAdapter?.scale(currentPosition, enable)
+    }
+
+    internal fun release() {
+        mediaAdapter?.release()
     }
 
     private fun animateOpen() {
@@ -258,9 +291,9 @@ internal class MediaViewerView<T> @JvmOverloads constructor(
     }
 
     private fun animateClose() {
+        release()
         prepareViewsForTransition()
         dismissContainer.applyMargin(0, 0, 0, 0)
-
         transitionImageAnimator.animateClose(
             shouldDismissToBottom = shouldDismissToBottom,
             onTransitionStart = { duration ->
@@ -272,13 +305,13 @@ internal class MediaViewerView<T> @JvmOverloads constructor(
 
     private fun prepareViewsForTransition() {
         transitionImageContainer.makeVisible()
-        imagesPager.makeGone()
+        viewPager.makeGone()
     }
 
     private fun prepareViewsForViewer() {
         backgroundView.alpha = 1f
         transitionImageContainer.makeGone()
-        imagesPager.makeVisible()
+        viewPager.makeVisible()
     }
 
     private fun handleTouchIfNotScaled(event: MotionEvent): Boolean {
@@ -286,13 +319,13 @@ internal class MediaViewerView<T> @JvmOverloads constructor(
 
         return when (swipeDirection) {
             UP, DOWN -> {
-                if (isSwipeToDismissAllowed && !wasScaled && imagesPager.isIdle) {
+                if (isSwipeToDismissAllowed && !wasScaled && isPagerIdle) {
                     swipeDismissHandler.onTouch(rootContainer, event)
                 } else true
             }
 
             LEFT, RIGHT -> {
-                imagesPager.dispatchTouchEvent(event)
+                viewPager.dispatchTouchEvent(event)
             }
 
             else -> true
@@ -315,7 +348,7 @@ internal class MediaViewerView<T> @JvmOverloads constructor(
     private fun handleEventActionDown(event: MotionEvent) {
         swipeDirection = null
         wasScaled = false
-        imagesPager.dispatchTouchEvent(event)
+        viewPager.dispatchTouchEvent(event)
 
         swipeDismissHandler.onTouch(rootContainer, event)
         isOverlayWasClicked = dispatchOverlayTouch(event)
@@ -324,7 +357,7 @@ internal class MediaViewerView<T> @JvmOverloads constructor(
     private fun handleEventActionUp(event: MotionEvent) {
         wasDoubleTapped = false
         swipeDismissHandler.onTouch(rootContainer, event)
-        imagesPager.dispatchTouchEvent(event)
+        viewPager.dispatchTouchEvent(event)
         isOverlayWasClicked = dispatchOverlayTouch(event)
     }
 
@@ -354,7 +387,7 @@ internal class MediaViewerView<T> @JvmOverloads constructor(
     private fun createGestureDetector() =
         GestureDetector(context, SimpleOnGestureListener(
             onSingleTap = {
-                if (imagesPager.isIdle) {
+                if (isPagerIdle) {
                     handleSingleTap(it, isOverlayWasClicked)
                 }
                 false
@@ -382,4 +415,6 @@ internal class MediaViewerView<T> @JvmOverloads constructor(
             internalImage = this.transitionImageView,
             internalImageContainer = this.transitionImageContainer
         )
+
+
 }

@@ -18,12 +18,10 @@ package com.liberty.mediaviewer.viewer.adapter
 
 import android.content.Context
 import android.net.Uri
-import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.ExoPlayer.Builder
 import androidx.media3.ui.PlayerView
 import com.github.chrisbanes.photoview.PhotoView
 import com.liberty.mediaviewer.common.extensions.resetScale
@@ -46,14 +44,6 @@ internal class MediaPagerAdapter<T>(
     )
     private val holders = mutableListOf<ViewHolder>()
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        return ViewHolder(FrameLayout(context).apply {
-            layoutParams = viewLayoutParams
-        }).also { holders.add(it) }
-    }
-
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) = holder.bind(position)
-
     override fun getItemCount() = items.size
 
     fun updateMedias(newItems: List<T>) {
@@ -62,69 +52,94 @@ internal class MediaPagerAdapter<T>(
     }
 
     fun isScaled(position: Int): Boolean =
-        holders.firstOrNull {
-            it.position == position
-        }?.isScaled == true
+        holders.firstOrNull { it.position == position }?.isScaled == true
 
     fun resetScale(position: Int) {
         holders.firstOrNull { it.position == position }?.resetScale()
     }
 
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val container = FrameLayout(context).apply {
+            layoutParams = viewLayoutParams
+        }
+
+        val photoView = PhotoView(context).apply {
+            isEnabled = isZoomingAllowed
+            setAllowParentInterceptOnEdge(true)
+            layoutParams = viewLayoutParams
+        }
+
+        val playerView = PlayerView(context).apply {
+            layoutParams = viewLayoutParams
+            useController = true
+        }
+
+        return ViewHolder(container, photoView, playerView).also { holders.add(it) }
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        holder.bind(position, items[position])
+    }
+
+    fun releaseAllPlayers() {
+        holders.forEach { it.releasePlayer() }
+    }
+
+    fun handlePageSelected(position: Int) {
+        holders.forEach {
+            if (it.position == position) {
+                it.resumePlayback()
+            } else {
+                it.pausePlayback()
+            }
+        }
+    }
+
     internal inner class ViewHolder(
-        itemView: View
-    ) : RecyclingPagerAdapter.ViewHolder(itemView) {
+        private val container: FrameLayout,
+        private val photoView: PhotoView,
+        private val playerView: PlayerView
+    ) : RecyclingPagerAdapter.ViewHolder(container) {
 
-        private val container = itemView as FrameLayout
-        private var photoView: PhotoView? = null
-        private var playerView: PlayerView? = null
         private var exoPlayer: ExoPlayer? = null
-
         var isScaled: Boolean = false
-            get() = (photoView?.scale ?: 1f) > 1f
+            get() = (photoView.scale) > 1f
 
-
-        fun bind(position: Int) {
+        fun bind(position: Int, item: T) {
             this.position = position
-            val item = items[position]
             container.removeAllViews()
 
-            if (isVideo?.invoke(item) == true) {
-                val path = getMediaPath?.invoke(item)
-                if (path == null) setupPhotoView(item)
-                else setupPlayerView(path)
+            val isVideo = isVideo?.invoke(item) == true
+            val path = getMediaPath?.invoke(item)
+
+            if (isVideo && path != null) {
+                setupPlayerView(path)
             } else {
                 setupPhotoView(item)
             }
         }
 
         fun resetScale() {
-            photoView?.resetScale(animate = true)
+            photoView.resetScale(animate = true)
         }
 
         private fun setupPhotoView(item: T) {
-            photoView = PhotoView(context).apply {
-                isEnabled = isZoomingAllowed
-                setAllowParentInterceptOnEdge(true)
-                layoutParams = viewLayoutParams
-            }
             container.addView(photoView)
-            imageLoader.loadImage(photoView!!, item)
+            photoView.resetScale(animate = true)
+            imageLoader.loadImage(photoView, item)
         }
 
         private fun setupPlayerView(path: String) {
             val uri = if (path.startsWith("http")) Uri.parse(path) else Uri.fromFile(File(path))
 
-            playerView = PlayerView(context).apply {
-                layoutParams = viewLayoutParams
-                useController = true
-            }
-
-            exoPlayer = Builder(context).build().apply {
+            exoPlayer?.release()
+            exoPlayer = ExoPlayer.Builder(context).build().apply {
                 setMediaItem(MediaItem.fromUri(uri))
                 prepare()
-                playWhenReady = true
+                playWhenReady = false // will auto play on page selected
             }
-            playerView?.player = exoPlayer
+
+            playerView.player = exoPlayer
             container.addView(playerView)
         }
 
@@ -132,10 +147,20 @@ internal class MediaPagerAdapter<T>(
             exoPlayer?.release()
             exoPlayer = null
         }
+
+        fun pausePlayback() {
+            exoPlayer?.playWhenReady = false
+        }
+
+        fun resumePlayback() {
+            exoPlayer?.playWhenReady = true
+        }
     }
 
-    fun releaseAllPlayers() {
-        holders.forEach { it.releasePlayer() }
+    override fun destroyItem(container: ViewGroup, position: Int, any: Any) {
+        val holder = any as? MediaPagerAdapter<T>.ViewHolder?
+        if (holder != null) {
+            container.removeView(holder.itemView)
+        }
     }
-
 }

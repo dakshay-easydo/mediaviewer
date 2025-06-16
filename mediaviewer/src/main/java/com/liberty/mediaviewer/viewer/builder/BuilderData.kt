@@ -25,9 +25,8 @@ import com.liberty.mediaviewer.loader.ImageLoader
 
 class BuilderData<T>(
     val medias: List<T>,
-    val imageLoader: ImageLoader<T>,
-    val isVideo: ((T) -> Boolean)? = null,
-    val getMediaPath: ((T) -> String)? = null,
+    val isVideo: (T) -> Boolean,
+    val getMediaPath: (T) -> String,
 ) {
     var backgroundColor = Color.BLACK
     var startPosition: Int = 0

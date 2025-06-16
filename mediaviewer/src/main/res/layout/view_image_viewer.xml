@@ -26,7 +26,7 @@
         android:id="@+id/backgroundView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:alpha="0"/>
+        android:alpha="0" />
 
     <FrameLayout
         android:id="@+id/dismissContainer"
@@ -39,20 +39,18 @@
             android:layout_height="match_parent"
             tools:ignore="UselessParent">
 
-            <ImageView
+            <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/transitionImageView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                tools:ignore="ContentDescription"/>
+                tools:ignore="ContentDescription" />
 
         </FrameLayout>
 
-        <com.liberty.mediaviewer.common.pager.MultiTouchViewPager
-            android:id="@+id/imagesPager"
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/viewPager"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:visibility="gone"/>
-
+            android:visibility="gone" />
     </FrameLayout>
-
 </FrameLayout>
