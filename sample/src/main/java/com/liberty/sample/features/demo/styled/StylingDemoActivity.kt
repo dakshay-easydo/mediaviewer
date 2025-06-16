@@ -62,12 +62,12 @@ class StylingDemoActivity : BaseActivity() {
             isVideo = ::isVideo,
         )
             .withStartPosition(startPosition)
-            .withMediaChangeListener { position ->
+            .withPageChangeListener { position, media ->
                 if (options.isPropertyEnabled(SHOW_TRANSITION)) {
                     viewer?.updateTransitionImage(binding.stylingPostersGridView.imageViews[position])
                 }
 
-                overlayView?.update(posters[position])
+                overlayView?.update(media)
             }
             .withDismissListener { showShortToast(R.string.message_on_dismiss) }
 

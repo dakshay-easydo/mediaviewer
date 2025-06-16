@@ -20,7 +20,6 @@ package com.liberty.mediaviewer.listeners;
  * Interface definition for a callback to be invoked when current image position was changed.
  */
 //N.B.! This class is written in Java for convenient use of lambdas due to languages compatibility issues.
-public interface OnPageChangeListener {
-
-    void onPageChange(int position);
+public interface OnPageChangeListener<T> {
+    void onPageChange(int position, T t);
 }

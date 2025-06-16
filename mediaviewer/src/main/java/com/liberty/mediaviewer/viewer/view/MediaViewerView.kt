@@ -71,7 +71,7 @@ internal class MediaViewerView<T>
         }
 
     internal var onDismiss: (() -> Unit)? = null
-    internal var onPageChange: ((position: Int) -> Unit)? = null
+    internal var onPageChange: ((position: Int, t: T?) -> Unit)? = null
 
     internal val isScaled
         get() = mediaAdapter?.isScaled(currentPosition) == true
@@ -162,7 +162,7 @@ internal class MediaViewerView<T>
                 externalTransitionImageView?.apply {
                     if (isAtStartPosition) makeInvisible() else makeVisible()
                 }
-                onPageChange?.invoke(it)
+                onPageChange?.invoke(it, mediaAdapter?.getItem(it))
             })
 
 

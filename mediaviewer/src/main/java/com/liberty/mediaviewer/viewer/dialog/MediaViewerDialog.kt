@@ -172,8 +172,10 @@ internal class MediaViewerDialog<T>(
             imagesMargin = builderData.imageMarginPixels
             overlayView = builderData.overlayView
             backgroundColor = builderData.backgroundColor
-            onPageChange = { builderData.pageChange?.onPageChange(it) }
             onDismiss = { dialog.dismiss() }
+            onPageChange = { position, media ->
+                builderData.pageChange?.onPageChange(position, media)
+            }
             setItems(
                 images = builderData.medias,
                 startPosition = builderData.startPosition,

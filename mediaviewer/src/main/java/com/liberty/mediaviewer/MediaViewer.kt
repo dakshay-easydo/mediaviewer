@@ -117,7 +117,7 @@ open class MediaViewer<T> protected constructor(
         private val data: BuilderData<T> = BuilderData<T>(
             medias = medias,
             getMediaPath = getMediaPath,
-            isVideo = isVideo ?: { false },
+            isVideo = isVideo ?: { false }
         )
 
         /**
@@ -274,8 +274,8 @@ open class MediaViewer<T> protected constructor(
          *
          * @return This Builder object to allow calls chaining
          */
-        fun withMediaChangeListener(mediaChangeListener: OnPageChangeListener?): Builder<T> {
-            this.data.pageChange = mediaChangeListener
+        fun withPageChangeListener(pageChangeListener: OnPageChangeListener<T>?): Builder<T> {
+            this.data.pageChange = pageChangeListener
             return this
         }
 

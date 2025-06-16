@@ -29,7 +29,7 @@ class BuilderData<T>(
 ) {
     var backgroundColor = Color.BLACK
     var startPosition: Int = 0
-    var pageChange: OnPageChangeListener? = null
+    var pageChange: OnPageChangeListener<T>? = null
     var onDismissListener: OnDismissListener? = null
     var overlayView: View? = null
     var imageMarginPixels: Int = 0

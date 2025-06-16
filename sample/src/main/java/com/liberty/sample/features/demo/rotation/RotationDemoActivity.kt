@@ -65,9 +65,9 @@ class RotationDemoActivity : AppCompatActivity() {
         )
             .withTransitionFrom(getTransitionTarget(startPosition))
             .withStartPosition(startPosition)
-            .withMediaChangeListener {
-                currentPosition = it
-                viewer.updateTransitionImage(getTransitionTarget(it))
+            .withPageChangeListener { position, media ->
+                currentPosition = position
+                viewer.updateTransitionImage(getTransitionTarget(position))
             }
             .withDismissListener { isDialogShown = false }
             .show(!isDialogShown)

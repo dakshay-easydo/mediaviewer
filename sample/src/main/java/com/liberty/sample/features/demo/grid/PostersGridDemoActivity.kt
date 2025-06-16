@@ -41,8 +41,8 @@ class PostersGridDemoActivity : AppCompatActivity() {
                 getMediaPath = ::getMediaPath,
             )
             .withTransitionFrom(target)
-            .withMediaChangeListener {
-                viewer.updateTransitionImage(binding.postersGridView.imageViews[it])
+            .withPageChangeListener { position, media ->
+                viewer.updateTransitionImage(binding.postersGridView.imageViews[position])
             }
             .show()
 

@@ -8,7 +8,6 @@ import com.liberty.sample.R
 import com.liberty.sample.common.extensions.getDrawableCompat
 import com.liberty.sample.common.extensions.loadImage
 import com.liberty.sample.common.models.Demo
-import com.liberty.sample.common.models.Poster
 import com.liberty.sample.databinding.ActivityDemoScrollingImagesBinding
 
 class ScrollingImagesDemoActivity : AppCompatActivity() {
@@ -69,8 +68,9 @@ class ScrollingImagesDemoActivity : AppCompatActivity() {
         )
             .withStartPosition(startPosition)
             .withTransitionFrom(target)
-            .withMediaChangeListener { viewer.updateTransitionImage(imageViews.getOrNull(it)) }
-            .show()
+            .withPageChangeListener { position, media ->
+                viewer.updateTransitionImage(imageViews.getOrNull(position))
+            }.show()
     }
 
     private fun loadImage(imageView: ImageView, url: String?) {
